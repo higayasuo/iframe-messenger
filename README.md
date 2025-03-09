@@ -14,13 +14,13 @@ This package enables the use of iframe and postMessage interactions in a type-sa
 ## Installation
 
 ```bash
-npm install iframe-messenger
+npm install @higayasuo/iframe-messenger
 ```
 
 ## Usage
 
 ```typescript
-import { IframeMessenger } from 'iframe-messenger';
+import { IframeMessenger } from '@higayasuo/iframe-messenger';
 
 // Define your message types
 type SuccessMessage = {
