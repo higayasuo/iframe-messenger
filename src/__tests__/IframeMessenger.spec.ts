@@ -21,31 +21,9 @@ describe('IframeMessenger', () => {
   beforeEach(() => {
     errorFunc = vi.fn();
     messenger = new IframeMessenger(errorFunc);
-
-    // Mock createElement to track iframe creation
-    vi.spyOn(document, 'createElement').mockImplementation((tagName) => {
-      const element = {
-        style: {},
-        tagName: tagName.toUpperCase(),
-        appendChild: vi.fn(),
-      } as unknown as HTMLElement;
-
-      if (tagName === 'iframe') {
-        return {
-          ...element,
-          src: '',
-        } as unknown as HTMLIFrameElement;
-      }
-
-      return element;
-    });
-
-    // Mock appendChild to prevent actual DOM manipulation
-    vi.spyOn(document.body, 'appendChild').mockReturnValue(document.body);
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
     messenger.close();
   });
 
@@ -53,9 +31,56 @@ describe('IframeMessenger', () => {
     const url = 'https://example.com';
     await messenger.open({ url });
 
-    const createElementCalls = vi.mocked(document.createElement).mock.calls;
-    const iframeCalls = createElementCalls.filter(([tag]) => tag === 'iframe');
-    expect(iframeCalls.length).toBe(1);
+    const iframe = document.querySelector('iframe');
+    expect(iframe).toBeTruthy();
+    expect(iframe?.src).toBe(url + '/');
+  });
+
+  it('should open an iframe with default dimensions (100%)', async () => {
+    const url = 'https://example.com';
+    await messenger.open({ url });
+
+    const wrapper = document.querySelector('div[style*="width: 100%"]') as HTMLElement;
+    expect(wrapper).toBeTruthy();
+    expect(wrapper?.style.width).toBe('100%');
+    expect(wrapper?.style.height).toBe('100%');
+  });
+
+  it('should open an iframe with custom dimensions', async () => {
+    const url = 'https://example.com';
+    const width = '800px';
+    const height = '600px';
+    await messenger.open({ url, width, height });
+
+    const wrapper = document.querySelector(`div[style*="width: ${width}"]`) as HTMLElement;
+    expect(wrapper).toBeTruthy();
+    expect(wrapper?.style.width).toBe(width);
+    expect(wrapper?.style.height).toBe(height);
+  });
+
+  it('should open an iframe with default dimensions and position', async () => {
+    const url = 'https://example.com';
+    await messenger.open({ url });
+
+    const wrapper = document.querySelector('div[style*="width: 100%"]') as HTMLElement;
+    expect(wrapper).toBeTruthy();
+    expect(wrapper?.style.width).toBe('100%');
+    expect(wrapper?.style.height).toBe('100%');
+    expect(wrapper?.style.top).toBe('0');
+  });
+
+  it('should open an iframe with custom dimensions and position', async () => {
+    const url = 'https://example.com';
+    const width = '800px';
+    const height = '600px';
+    const top = '30px';
+    await messenger.open({ url, width, height, top });
+
+    const wrapper = document.querySelector(`div[style*="width: ${width}"]`) as HTMLElement;
+    expect(wrapper).toBeTruthy();
+    expect(wrapper?.style.width).toBe(width);
+    expect(wrapper?.style.height).toBe(height);
+    expect(wrapper?.style.top).toBe(top);
   });
 
   it('should handle origin mismatch error', () => {

@@ -51,7 +51,12 @@ messenger.on('error', (message) => {
 });
 
 // Open the iframe
-await messenger.open({ url: 'https://example.com' });
+await messenger.open({
+  url: 'https://example.com',
+  width: '100%',  // Optional: defaults to '100%'
+  height: '100%',  // Optional: defaults to '100%'
+  top: '0'        // Optional: defaults to '0'
+});
 
 // Close the iframe when done
 messenger.close();
@@ -81,11 +86,14 @@ Registers a handler for a specific message kind.
 - `handler`: Function to handle messages of the specified kind
 - Returns: The IframeMessenger instance for chaining
 
-##### `open(options: { url: string }): Promise<void>`
+##### `open(options: { url: string; width?: string; height?: string; top?: string }): Promise<void>`
 
 Opens an iframe with the specified URL in a modal-like overlay.
 
 - `url`: The URL to load in the iframe
+- `width`: Optional width of the iframe. Defaults to '100%'
+- `height`: Optional height of the iframe. Defaults to '100%'
+- `top`: Optional top position of the iframe. Defaults to '0'
 
 ##### `close(): Promise<void>`
 
@@ -99,9 +107,10 @@ The package includes built-in origin validation to prevent cross-origin attacks.
 
 The iframe is displayed in a modal-like overlay with:
 - Semi-transparent background
-- Centered positioning
+- Centered positioning (horizontally)
+- Customizable top position (defaults to 0)
 - Close button in the top-right corner
-- Responsive dimensions (400px × 600px by default)
+- Customizable dimensions (defaults to 100% × 100%)
 - Clean, modern styling with rounded corners
 
 ## Error Handling

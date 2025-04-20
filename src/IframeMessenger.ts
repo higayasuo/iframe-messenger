@@ -7,6 +7,12 @@ export type ErrorFunc = (error: Error) => void;
 export interface IframeMessengerOpenOptions {
   /** URL to load in the iframe */
   url: string;
+  /** Width of the iframe. Defaults to '100%' */
+  width?: string;
+  /** Height of the iframe. Defaults to '100%' */
+  height?: string;
+  /** Top position of the iframe. Defaults to '0' */
+  top?: string;
 }
 
 /**
@@ -80,7 +86,7 @@ export class IframeMessenger<T extends { kind: string }> {
    * @param options - Options for opening the iframe
    * @throws {WindowOpenError} If the iframe cannot be created
    */
-  public async open({ url }: IframeMessengerOpenOptions): Promise<void> {
+  public async open({ url, width = '100%', height = '100%', top = '0' }: IframeMessengerOpenOptions): Promise<void> {
     const targetUrl = new URL(url);
 
     this.close();
@@ -103,8 +109,9 @@ export class IframeMessenger<T extends { kind: string }> {
     // Create a wrapper for iframe and close button
     const wrapper = document.createElement('div');
     wrapper.style.position = 'relative';
-    wrapper.style.width = '400px';
-    wrapper.style.height = '600px';
+    wrapper.style.width = width;
+    wrapper.style.height = height;
+    wrapper.style.top = top;
 
     // Create the iframe
     this.iframe = document.createElement('iframe');
