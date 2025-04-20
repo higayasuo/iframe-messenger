@@ -4,7 +4,7 @@
     "module": "ESNext",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "declaration": true,
-    "sourceMap": true,
+    "sourceMap": false,
     "moduleResolution": "node",
     "skipLibCheck": true,
     "strict": true,

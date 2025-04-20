@@ -62,11 +62,15 @@ describe('IframeMessenger', () => {
     const url = 'https://example.com';
     await messenger.open({ url });
 
-    const wrapper = document.querySelector('div[style*="width: 100%"]') as HTMLElement;
+    const iframe = document.querySelector('iframe');
+    expect(iframe).toBeTruthy();
+    expect(iframe?.src).toBe(url + '/');
+
+    const wrapper = iframe?.parentElement;
     expect(wrapper).toBeTruthy();
     expect(wrapper?.style.width).toBe('100%');
     expect(wrapper?.style.height).toBe('100%');
-    expect(wrapper?.style.top).toBe('0');
+    expect(wrapper?.style.top).toBe('0px');
   });
 
   it('should open an iframe with custom dimensions and position', async () => {
@@ -76,7 +80,11 @@ describe('IframeMessenger', () => {
     const top = '30px';
     await messenger.open({ url, width, height, top });
 
-    const wrapper = document.querySelector(`div[style*="width: ${width}"]`) as HTMLElement;
+    const iframe = document.querySelector('iframe');
+    expect(iframe).toBeTruthy();
+    expect(iframe?.src).toBe(url + '/');
+
+    const wrapper = iframe?.parentElement;
     expect(wrapper).toBeTruthy();
     expect(wrapper?.style.width).toBe(width);
     expect(wrapper?.style.height).toBe(height);

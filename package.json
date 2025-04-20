@@ -3,14 +3,14 @@
   "version": "0.1.1",
   "description": "A library for iframe communication",
   "type": "module",
-  "main": "./dist/iframe-messenger.umd.cjs",
-  "module": "./dist/iframe-messenger.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/iframe-messenger.js",
-      "require": "./dist/iframe-messenger.umd.cjs",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
     }
   },
   "files": [
@@ -18,8 +18,8 @@
   ],
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "test": "vitest run",
+    "build": "vite build",
+    "test": "vitest --run",
     "test:watch": "vitest",
     "lint": "eslint . --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",

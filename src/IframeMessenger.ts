@@ -111,7 +111,7 @@ export class IframeMessenger<T extends { kind: string }> {
     wrapper.style.position = 'relative';
     wrapper.style.width = width;
     wrapper.style.height = height;
-    wrapper.style.top = top;
+    wrapper.style.top = top === '0' ? '0' : top;
 
     // Create the iframe
     this.iframe = document.createElement('iframe');

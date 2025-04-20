@@ -7,10 +7,9 @@ export default defineConfig({
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
       name: 'IframeMessenger',
-      fileName: 'iframe-messenger',
-      formats: ['es', 'umd']
+      fileName: (format) => `index.${format === 'es' ? 'mjs' : 'cjs'}`,
+      formats: ['es', 'cjs']
     },
-    sourcemap: true,
     rollupOptions: {
       external: [],
       output: {
