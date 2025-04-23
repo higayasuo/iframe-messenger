@@ -23,7 +23,7 @@
     "test:watch": "vitest",
     "lint": "eslint . --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run build"
+    "prepare": "npm run typecheck && npm run build && npm test"
   },
   "keywords": [
     "iframe",
