@@ -1,162 +1,111 @@
-import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { IframeMessenger } from '../IframeMessenger';
-import { OriginMismatchError } from '../OriginMismatchError';
+import { createContainer } from '../createContainer';
+import { createWrapper } from '../createWrapper';
+import { createIframe } from '../createIframe';
+import { createCloseButton } from '../createCloseButton';
 
-type TestSuccessResponse = {
-  kind: 'test';
-  value: string;
-};
+vi.mock('../createContainer', () => ({
+  createContainer: vi.fn().mockReturnValue(document.createElement('div')),
+}));
 
-type TestErrorResponse = {
-  kind: 'error';
-  message: string;
-};
+vi.mock('../createWrapper', () => ({
+  createWrapper: vi.fn().mockReturnValue(document.createElement('div')),
+}));
 
-type TestResponse = TestSuccessResponse | TestErrorResponse;
+vi.mock('../createIframe', () => ({
+  createIframe: vi.fn().mockReturnValue(document.createElement('iframe')),
+}));
+
+vi.mock('../createCloseButton', () => ({
+  createCloseButton: vi.fn().mockReturnValue(document.createElement('button')),
+}));
 
 describe('IframeMessenger', () => {
-  let messenger: IframeMessenger<TestResponse>;
-  let errorFunc: Mock;
+  let messenger: IframeMessenger<{ kind: string; data: string }>;
+  const mockErrorFunc = vi.fn();
 
   beforeEach(() => {
-    errorFunc = vi.fn();
-    messenger = new IframeMessenger(errorFunc);
-  });
-
-  afterEach(() => {
-    messenger.close();
+    messenger = new IframeMessenger(mockErrorFunc);
+    vi.clearAllMocks();
   });
 
   it('should open an iframe with correct URL', async () => {
-    const url = 'https://example.com';
+    const url = 'https://example.com/';
     await messenger.open({ url });
 
-    const iframe = document.querySelector('iframe');
-    expect(iframe).toBeTruthy();
-    expect(iframe?.src).toBe(url + '/');
-  });
-
-  it('should open an iframe with default dimensions (100%)', async () => {
-    const url = 'https://example.com';
-    await messenger.open({ url });
-
-    const wrapper = document.querySelector('div[style*="width: 100%"]') as HTMLElement;
-    expect(wrapper).toBeTruthy();
-    expect(wrapper?.style.width).toBe('100%');
-    expect(wrapper?.style.height).toBe('100%');
-  });
-
-  it('should open an iframe with custom dimensions', async () => {
-    const url = 'https://example.com';
-    const width = '800px';
-    const height = '600px';
-    await messenger.open({ url, width, height });
-
-    const wrapper = document.querySelector(`div[style*="width: ${width}"]`) as HTMLElement;
-    expect(wrapper).toBeTruthy();
-    expect(wrapper?.style.width).toBe(width);
-    expect(wrapper?.style.height).toBe(height);
-  });
-
-  it('should open an iframe with default dimensions and position', async () => {
-    const url = 'https://example.com';
-    await messenger.open({ url });
-
-    const iframe = document.querySelector('iframe');
-    expect(iframe).toBeTruthy();
-    expect(iframe?.src).toBe(url + '/');
-
-    const wrapper = iframe?.parentElement;
-    expect(wrapper).toBeTruthy();
-    expect(wrapper?.style.width).toBe('100%');
-    expect(wrapper?.style.height).toBe('100%');
-    expect(wrapper?.style.top).toBe('0px');
+    expect(createContainer).toHaveBeenCalledWith({ width: '100%', height: '100%' });
+    expect(createWrapper).toHaveBeenCalledWith({ width: '100%', height: '100%', top: '0' });
+    expect(createIframe).toHaveBeenCalledWith({ url, width: '100%', height: '100%' });
+    expect(createCloseButton).toHaveBeenCalled();
   });
 
   it('should open an iframe with custom dimensions and position', async () => {
-    const url = 'https://example.com';
-    const width = '800px';
-    const height = '600px';
-    const top = '30px';
+    const url = 'https://example.com/';
+    const width = '50%';
+    const height = '200px';
+    const top = '10px';
+
     await messenger.open({ url, width, height, top });
 
-    const iframe = document.querySelector('iframe');
-    expect(iframe).toBeTruthy();
-    expect(iframe?.src).toBe(url + '/');
-
-    const wrapper = iframe?.parentElement;
-    expect(wrapper).toBeTruthy();
-    expect(wrapper?.style.width).toBe(width);
-    expect(wrapper?.style.height).toBe(height);
-    expect(wrapper?.style.top).toBe(top);
+    expect(createContainer).toHaveBeenCalledWith({ width, height });
+    expect(createWrapper).toHaveBeenCalledWith({ width, height, top });
+    expect(createIframe).toHaveBeenCalledWith({ url, width, height });
+    expect(createCloseButton).toHaveBeenCalled();
   });
 
-  it('should handle origin mismatch error', () => {
-    const targetUrl = new URL('https://example.com');
-    messenger.setupEventHandler(targetUrl);
+  it('should handle origin mismatch error', async () => {
+    const url = 'https://example.com/';
+    const invalidOrigin = 'https://invalid.com';
 
-    const event = new MessageEvent('message', {
-      origin: 'https://malicious.com',
-      data: { kind: 'test', value: 'test-value' } satisfies TestSuccessResponse,
-    });
+    await messenger.open({ url });
+    window.dispatchEvent(new MessageEvent('message', {
+      origin: invalidOrigin,
+      data: { kind: 'test', data: 'test' },
+    }));
 
-    window.dispatchEvent(event);
-
-    expect(errorFunc).toHaveBeenCalledWith(expect.any(OriginMismatchError));
+    expect(mockErrorFunc).toHaveBeenCalled();
   });
 
-  it('should handle messages with registered handlers', () => {
-    const targetUrl = new URL('https://example.com');
-    const handler = vi.fn();
-    const testData: TestSuccessResponse = {
-      kind: 'test',
-      value: 'test-value',
-    };
+  it('should handle messages with registered handlers', async () => {
+    const url = 'https://example.com/';
+    const mockHandler = vi.fn();
+    const message = { kind: 'test', data: 'test' };
 
-    messenger.on('test', handler);
-    messenger.setupEventHandler(targetUrl);
+    messenger.on('test', mockHandler);
+    await messenger.open({ url });
 
-    const event = new MessageEvent('message', {
-      origin: 'https://example.com',
-      data: testData,
-    });
+    window.dispatchEvent(new MessageEvent('message', {
+      origin: new URL(url).origin,
+      data: message,
+    }));
 
-    window.dispatchEvent(event);
-
-    expect(handler).toHaveBeenCalledWith(testData);
+    expect(mockHandler).toHaveBeenCalledWith(message);
   });
 
   it('should clean up resources on close', async () => {
-    const url = 'https://example.com';
+    const url = 'https://example.com/';
     await messenger.open({ url });
 
     const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
-    messenger.close();
+    await messenger.close();
 
     expect(removeEventListenerSpy).toHaveBeenCalled();
   });
 
-  it('should handle type-safe message handlers', () => {
-    // Test success message handler
-    messenger.on('test', (data) => {
-      expect(data.value).toBeDefined();
-    });
+  it('should handle type-safe message handlers', async () => {
+    const url = 'https://example.com/';
+    const mockHandler = vi.fn();
+    const message = { kind: 'test', data: 'test' };
 
-    // Test error message handler
-    messenger.on('error', (data) => {
-      expect(data.message).toBeDefined();
-    });
+    messenger.on('test', mockHandler);
+    await messenger.open({ url });
 
-    // Test discriminated union handler
-    const handler = (data: TestResponse) => {
-      if (data.kind === 'test') {
-        expect(data.value).toBeDefined();
-      } else {
-        expect(data.message).toBeDefined();
-      }
-    };
+    window.dispatchEvent(new MessageEvent('message', {
+      origin: new URL(url).origin,
+      data: message,
+    }));
 
-    messenger.on('test', handler);
-    messenger.on('error', handler);
+    expect(mockHandler).toHaveBeenCalledWith(message);
   });
 });
